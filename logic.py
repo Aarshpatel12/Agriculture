@@ -9,7 +9,7 @@ import contextlib
 from pydantic import BaseModel, Field
 
 # Google GenAI for disease detection
-import google.generativeai as genai
+from google import genai
 
 # Weather and Advisory Generation Libraries
 import openmeteo_requests
@@ -43,26 +43,16 @@ DISEASE_MODEL = "gemini-1.5-flash"
 
 
 # --- Disease Detection Logic ---
-
-def perform_disease_detection(image_bytes: bytes, mime_type: str, context: str) -> str:
-    """Analyzes a plant image using the Gemini model and returns the analysis."""
-    try:
-        model = genai.GenerativeModel(DISEASE_MODEL)
-        PROMPT = f"""
-        You are an agricultural expert.
-        Convert the following context to English and then analyze the image:
-        Context: {context}
-        1. Determine if the plant is healthy or diseased.
-        2. If diseased, identify the most likely plant disease.
-        3. Give the final answer in Hindi.
-        """
-        response = model.generate_content(
-            [PROMPT, {"mime_type": mime_type, "data": image_bytes}]
-        )
-        return response.text
-    except Exception as e:
-        print(f"Error during Gemini API call: {e}")
-        return "Could not analyze the image. Please ensure your Google API key is set correctly."
+# Initialize Google GenAI Client
+try:
+    API_KEY = os.getenv("GOOGLE_API_KEY")
+    if not API_KEY:
+        print("⚠  Warning: GOOGLE_API_KEY not found. Using mock responses for demo in /setuAgent.")
+        API_KEY = "demo_mode"
+    else:
+        genai.configure(api_key=API_KEY)
+except Exception as e:
+    print(f"Warning: Google API Key not configured. The /detect endpoint will not work. Error: {e}")
 
 
 
